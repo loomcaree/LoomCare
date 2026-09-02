@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowDown, ArrowRight, BellRing, Check, Heart, HeartPulse, MapPin,
-  MessageCircleHeart, Phone, Pill, Radio, ShieldCheck, Sparkles, Users, X,
+  ChevronLeft, ChevronRight, MessageCircleHeart, Phone, Pill, Radio, ShieldCheck, Sparkles, Users, X,
 } from 'lucide-react';
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -56,6 +56,11 @@ export function LoomCareLanding() {
   const [activeRoadmap, setActiveRoadmap] = useState(0);
   const { scrollYProgress } = useScroll();
   const progress = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const roadmapLabels = ['Care', 'Voice', 'Connect', 'Insight'];
+
+  function moveRoadmap(direction: -1 | 1) {
+    setActiveRoadmap((current) => Math.max(0, Math.min(roadmapLabels.length - 1, current + direction)));
+  }
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && (setMenuOpen(false), setAuthOpen(false));
@@ -139,11 +144,36 @@ export function LoomCareLanding() {
 
       <section id="roadmap" className="roadmap-section">
         <div className="roadmap-title"><p>One gentle step at a time</p><h2>The care story<br/><em>keeps growing.</em></h2></div>
-        <div className="roadmap-tabs" role="tablist" aria-label="Loom Care roadmap">{['Care','Voice','Connect','Insight'].map((label, i) => <button key={label} role="tab" aria-selected={activeRoadmap === i} onClick={() => setActiveRoadmap(i)}><span>0{i + 1}</span>{label}</button>)}</div>
-        <motion.div key={activeRoadmap} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45 }} className="roadmap-panel">
+        <div className="roadmap-swipe-head">
+          <div className="roadmap-tabs" aria-label="Roadmap progress">{roadmapLabels.map((label, i) => <div key={label} className={`roadmap-step ${activeRoadmap === i ? 'active' : ''}`} aria-current={activeRoadmap === i ? 'step' : undefined}><span>0{i + 1}</span>{label}</div>)}</div>
+          <div className="roadmap-controls"><button onClick={() => moveRoadmap(-1)} disabled={activeRoadmap === 0} aria-label="Previous roadmap version"><ChevronLeft/></button><button onClick={() => moveRoadmap(1)} disabled={activeRoadmap === roadmapLabels.length - 1} aria-label="Next roadmap version"><ChevronRight/></button></div>
+        </div>
+        <motion.div
+          key={activeRoadmap}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={.16}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -55 || info.velocity.x < -450) moveRoadmap(1);
+            if (info.offset.x > 55 || info.velocity.x > 450) moveRoadmap(-1);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowLeft') moveRoadmap(-1);
+            if (event.key === 'ArrowRight') moveRoadmap(1);
+          }}
+          tabIndex={0}
+          role="group"
+          aria-roledescription="carousel"
+          aria-label={`${roadmapLabels[activeRoadmap]}, roadmap version ${activeRoadmap + 1} of ${roadmapLabels.length}. Swipe or use arrow keys.`}
+          initial={{ opacity: 0, x: 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: .5, ease }}
+          className="roadmap-panel"
+        >
           <div><small>{['HERE NOW','COMING NEXT','ON THE HORIZON','OUR BIG PICTURE'][activeRoadmap]}</small><h3>{['Safety that asks nothing of them.','Reminders in the voices they love.','Freedom that travels beyond home.','Health patterns that finally make sense.'][activeRoadmap]}</h3><p>{['Fall detection, physical SOS, offline medicine reminders, and the family phone relay.','Spoken medicine names and recorded messages from children and grandchildren.','A direct eSIM, location sharing, and two-way calls without a nearby phone.','Connected blood pressure, oxygen, and glucose signals understood over time.'][activeRoadmap]}</p></div>
           <div className={`roadmap-object object-${activeRoadmap}`}><span className="roadmap-heart"><Heart fill="currentColor" /></span>{activeRoadmap === 0 && <Pendant/>}{activeRoadmap === 1 && <MessageCircleHeart className="roadmap-big-icon"/>}{activeRoadmap === 2 && <MapPin className="roadmap-big-icon"/>}{activeRoadmap === 3 && <HeartPulse className="roadmap-big-icon"/>}</div>
         </motion.div>
+        <div className="swipe-hint"><span/><p>Swipe to explore the next chapter</p><span/></div>
       </section>
 
       <section id="waitlist" className="waitlist-section">
