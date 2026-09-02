@@ -1,99 +1,160 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, BellRing, Bluetooth, Check, ChevronDown, Cloud, Database, HeartPulse, LockKeyhole, MemoryStick, Radio, ShieldCheck, Smartphone, Sparkles, Users, WifiOff, X } from 'lucide-react';
+import Image from 'next/image';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import {
+  ArrowDown, ArrowRight, BellRing, Check, Heart, HeartPulse, MapPin,
+  MessageCircleHeart, Phone, Pill, Radio, ShieldCheck, Sparkles, Users, X,
+} from 'lucide-react';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-export function LoomCareLanding() {
-  const [open, setOpen] = useState(false);
-  const [roadmap, setRoadmap] = useState(0);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [signInEmail, setSignInEmail] = useState('');
-  const [authMessage, setAuthMessage] = useState('');
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle');
-  const storyRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const fn=()=>setOpen(window.scrollY>80); fn(); window.addEventListener('scroll',fn,{passive:true});
-    gsap.registerPlugin(ScrollTrigger);
-    const ctx = gsap.context(() => { gsap.from('.story-step', { opacity: .25, y: 24, stagger: .18, scrollTrigger: { trigger: storyRef.current, start: 'top 72%', end: 'bottom 45%', scrub: .7 } }); }, storyRef);
-    return()=>{window.removeEventListener('scroll',fn);ctx.revert();};
-  },[]);
+function Pendant({ alert = false }: { alert?: boolean }) {
+  return (
+    <div className={`pendant-shell ${alert ? 'pendant-alert' : ''}`} aria-label="Loom Care pendant illustration">
+      <span className="pendant-loop" />
+      <div className="pendant-face">
+        <HeartPulse className="size-8" strokeWidth={1.5} />
+        <span className="pendant-light" />
+      </div>
+    </div>
+  );
+}
 
-  async function joinWaitlist(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setStatus('loading');
-    const data = Object.fromEntries(new FormData(event.currentTarget));
-    try { const response = await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,isBetaTester:data.isBetaTester==='on'})}); if(!response.ok) throw new Error(); setStatus('success'); event.currentTarget.reset(); }
-    catch { setStatus('error'); }
-  }
-
-  async function signInWithGoogle() {
-    setAuthMessage('Opening Google sign-in…');
-    try { const [{ signInWithPopup }, { auth, googleProvider }] = await Promise.all([import('firebase/auth'), import('@/lib/firebase')]); await signInWithPopup(auth, googleProvider); setAuthMessage('Signed in successfully.'); }
-    catch { setAuthMessage('Add valid Firebase keys to activate Google sign-in.'); }
-  }
-
-  async function sendMagicLink() {
-    if (!signInEmail.includes('@')) { setAuthMessage('Enter a valid email address.'); return; }
-    setAuthMessage('Sending secure sign-in link…');
-    try { const [{ sendSignInLinkToEmail }, { auth }] = await Promise.all([import('firebase/auth'), import('@/lib/firebase')]); await sendSignInLinkToEmail(auth, signInEmail, { url: `${window.location.origin}/`, handleCodeInApp: true }); localStorage.setItem('loomCareMagicEmail', signInEmail); setAuthMessage('Check your inbox for the sign-in link.'); }
-    catch { setAuthMessage('Add valid Firebase keys to activate magic-link sign-in.'); }
-  }
-  return <main className="min-h-screen overflow-hidden bg-[#0B0F17] text-white">
-    <div className="noise" />
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0B0F17]/78 backdrop-blur-xl"><div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
-      <a href="#concept" className="flex items-center gap-3" aria-label="Loom Care home"><span className="grid size-9 place-items-center rounded-xl border border-teal-300/30 bg-teal-400/10"><HeartPulse className="size-5 text-[#00C9A7]" /></span><span className="text-[17px] font-semibold tracking-tight">Loom Care</span><span className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[.14em] text-white/55 md:flex"><i className="size-1.5 rounded-full bg-[#00C9A7] shadow-[0_0_9px_#00C9A7]" /> Concept active</span></a>
-      <nav className="hidden items-center gap-8 text-sm text-white/60 lg:flex"><a href="#concept" className="hover:text-white">Concept</a><a href="#how-it-works" className="hover:text-white">How it works</a><a href="#tech-specs" className="hover:text-white">Tech specs</a><a href="#roadmap" className="hover:text-white">Roadmap</a></nav>
-      <div className="flex items-center gap-2"><button onClick={()=>setAuthOpen(true)} className="hidden px-4 py-2 text-sm text-white/70 hover:text-white sm:block">Sign in</button><a href="#waitlist" className="rounded-full bg-[#00C9A7] px-4 py-2.5 text-sm font-semibold text-[#03120f] shadow-[0_0_28px_rgba(0,201,167,.25)]">Join waitlist</a></div>
-    </div></header>
-    <section id="concept" className="relative min-h-[930px] pt-18"><div className="grid-bg absolute inset-0"/><div className="absolute left-[14%] top-24 size-[520px] rounded-full bg-teal-400/10 blur-[130px]"/>
-      <div className="relative mx-auto grid max-w-7xl gap-16 px-5 pb-28 pt-20 lg:grid-cols-[1.04fr_.96fr] lg:px-8 lg:pt-28">
-        <motion.div initial={{opacity:0,y:28}} animate={{opacity:1,y:0}} transition={{duration:.8,ease}} className="flex flex-col justify-center"><div className="mb-7 flex w-fit items-center gap-2 rounded-full border border-teal-300/20 bg-teal-300/[.07] px-3 py-1.5 text-xs font-medium text-teal-100"><Sparkles className="size-3.5 text-[#00C9A7]"/>Redefining elder safety & family connection</div><h1 className="text-balance max-w-3xl text-[clamp(3.35rem,6.6vw,6.35rem)] font-semibold leading-[.95] tracking-[-.065em]">Independence for them. <span className="bg-gradient-to-r from-[#00C9A7] to-[#9CEBDE] bg-clip-text text-transparent">Peace of mind</span> for you.</h1><p className="mt-7 max-w-xl text-balance text-lg leading-8 text-white/58">A discreet pendant that detects falls, delivers medication reminders, and alerts family instantly—without adding tech friction to your parents’ lives.</p>
-          <form onSubmit={e=>{e.preventDefault();document.querySelector('#waitlist')?.scrollIntoView({behavior:'smooth'})}} className="mt-9 flex max-w-xl flex-col gap-3 rounded-2xl border border-white/10 bg-white/[.045] p-2 sm:flex-row"><input type="email" required aria-label="Email address" placeholder="Your email address" className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm outline-none placeholder:text-white/30"/><button className="flex items-center justify-center gap-2 rounded-xl bg-[#00C9A7] px-5 py-3 text-sm font-semibold text-[#03120f]">Get early VIP access <ArrowRight className="size-4"/></button></form><div className="mt-5 flex items-center gap-6 text-xs text-white/38"><span className="flex items-center gap-1.5"><Check className="size-3.5 text-[#00C9A7]"/>No spam</span><span className="flex items-center gap-1.5"><LockKeyhole className="size-3.5 text-[#00C9A7]"/>Privacy first</span><span>Limited beta places</span></div>
-        </motion.div>
-        <motion.div initial={{opacity:0,scale:.94}} animate={{opacity:1,scale:1}} transition={{duration:1,delay:.15,ease}} className="relative flex min-h-[570px] items-center justify-center [perspective:1200px]"><div className="absolute inset-6 rounded-full border border-white/[.06]"/><div className="absolute inset-20 rounded-full border border-dashed border-teal-200/10"/><div className="absolute right-2 top-14 rounded-2xl border border-white/10 bg-[#121923]/80 px-4 py-3 backdrop-blur-xl"><p className="text-[10px] uppercase tracking-[.18em] text-white/35">Battery life</p><p className="mt-1 font-mono text-sm text-teal-200">7 days</p></div>
-          <div className={`relative h-[360px] w-[350px] transition-transform duration-1000 [transform-style:preserve-3d] ${open?'[transform:rotateX(5deg)_rotateY(-4deg)]':'[transform:rotateX(12deg)_rotateY(-8deg)]'}`}><div className="absolute bottom-0 left-1/2 h-48 w-72 -translate-x-1/2 rounded-[36px] border border-white/15 bg-gradient-to-br from-[#283440] to-[#101720] shadow-[0_40px_90px_rgba(0,0,0,.65),inset_0_1px_rgba(255,255,255,.15)]"><div className="absolute inset-5 rounded-[25px] border border-white/8 bg-[#0c1219] shadow-inner"/><p className="absolute bottom-5 left-0 right-0 text-center text-[10px] uppercase tracking-[.35em] text-white/30">Loom Care</p></div><div className={`absolute bottom-40 left-1/2 h-36 w-72 -translate-x-1/2 origin-bottom rounded-[36px] border border-white/15 bg-gradient-to-br from-[#34424e] to-[#141c25] shadow-2xl transition-transform duration-1000 [transform-style:preserve-3d] ${open?'[transform:rotateX(-115deg)]':'[transform:rotateX(-18deg)]'}`}><div className="absolute inset-5 rounded-[24px] border border-white/8"/></div><div className={`pendant-drift absolute left-1/2 grid size-36 -translate-x-1/2 place-items-center rounded-[45%] border border-white/20 bg-gradient-to-br from-[#25333d] to-[#090d13] shadow-[0_35px_80px_rgba(0,0,0,.7),inset_0_1px_rgba(255,255,255,.18)] transition-all duration-1000 ${open?'top-5':'top-36'}`}><div className="absolute -top-5 h-8 w-8 rounded-t-full border-x border-t border-white/20"/><div className="grid size-16 place-items-center rounded-full border border-white/15 bg-[#0d151c]"><span className="pulse-ring relative size-4 rounded-full bg-[#00C9A7] shadow-[0_0_24px_#00C9A7]"/></div><span className="absolute bottom-5 text-[8px] font-medium uppercase tracking-[.25em] text-white/35">LOOM</span></div></div><div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-[.2em] text-white/30"><span>Scroll to unbox</span><ChevronDown className="size-4 animate-bounce"/></div>
+function Chapter({
+  index, eyebrow, title, copy, tone, children,
+}: {
+  index: string; eyebrow: string; title: string; copy: string; tone: string; children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const visualY = useTransform(scrollYProgress, [0, .5, 1], [90, 0, -70]);
+  const visualRotate = useTransform(scrollYProgress, [0, .5, 1], [-4, 0, 4]);
+  return (
+    <section ref={ref} className={`story-chapter ${tone}`}>
+      <div className="story-sticky">
+        <motion.div style={{ y: visualY, rotate: visualRotate }} className="story-visual">{children}</motion.div>
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ amount: .55 }} transition={{ duration: .8, ease }} className="story-copy">
+          <span className="chapter-number">{index}</span>
+          <p>{eyebrow}</p>
+          <h2>{title}</h2>
+          <div className="story-rule" />
+          <span className="story-description">{copy}</span>
         </motion.div>
       </div>
     </section>
-    <section ref={storyRef} id="how-it-works" className="relative border-y border-white/10 bg-[#0d131c] py-24"><div className="mx-auto max-w-7xl px-5 lg:px-8"><p className="text-xs font-medium uppercase tracking-[.22em] text-[#00C9A7]">The Fall Shield</p><h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-.04em] sm:text-6xl">From impact to help, in seconds.</h2><div className="mt-14 grid gap-4 lg:grid-cols-4">{[
-      {n:'01',t:'Impact detected',d:'A 6-axis IMU recognizes the fall signature—not everyday movement.',Icon:ShieldCheck},
-      {n:'02',t:'20-second grace',d:'A vibration and chime give time to cancel a false alarm.',Icon:Radio},
-      {n:'03',t:'Secure relay',d:'BLE routes the alert through the family safety network.',Icon:ArrowRight},
-      {n:'04',t:'Shield activated',d:'Caregivers receive a persistent emergency alert and timestamp.',Icon:HeartPulse}
-    ].map(({n,t,d,Icon},i)=><motion.article key={t} whileHover={{y:-7}} className={`story-step glass relative min-h-72 rounded-[28px] p-6 ${i===3?'coral-shadow':''}`}><span className="font-mono text-xs text-white/30">{n}</span><div className={`mt-12 grid size-12 place-items-center rounded-2xl ${i===3?'bg-[#FF5A5F]/15 text-[#FF777B]':'bg-[#00C9A7]/12 text-[#00C9A7]'}`}><Icon className="size-5"/></div><h3 className="mt-7 text-xl font-semibold">{t}</h3><p className="mt-3 text-sm leading-6 text-white/48">{d}</p></motion.article>)}</div>
-      <div className="mt-5 grid gap-5 rounded-[32px] border border-white/10 bg-black/20 p-5 lg:grid-cols-[1fr_1.2fr] lg:p-8">
-        <div className="rounded-[24px] border border-white/10 bg-[#111a24] p-6"><div className="flex items-center justify-between"><span className="text-xs uppercase tracking-[.18em] text-white/35">Live simulation</span><span className="rounded-full bg-[#FF5A5F]/15 px-3 py-1 font-mono text-xs text-[#FF8185]">Fall detected</span></div><div className="mt-10 flex items-center gap-7"><div className="relative grid size-28 place-items-center rounded-full border border-[#FF5A5F]/30 bg-[#FF5A5F]/10"><span className="font-mono text-4xl font-medium">20</span><span className="absolute bottom-5 text-[9px] uppercase tracking-widest text-white/35">seconds</span></div><div><p className="text-xl font-medium">Are you okay?</p><p className="mt-2 max-w-xs text-sm leading-6 text-white/45">Pendant is vibrating and chiming. Press the physical button to cancel the alert.</p><button className="mt-5 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium">Cancel false alarm</button></div></div></div>
-        <div className="flex flex-col justify-center"><p className="text-sm text-white/45">The alert path</p><div className="mt-5 flex flex-wrap items-center gap-3">{[[Bluetooth,'Pendant','BLE'],[Smartphone,'Parent phone','Kotlin'],[Cloud,'Loom cloud','Node.js'],[BellRing,'Caregiver','Flutter']].map(([Icon,label,meta],i)=><div key={String(label)} className="contents"><div className="glass min-w-[108px] flex-1 rounded-2xl p-4"><Icon className="size-5 text-[#00C9A7]"/><p className="mt-4 text-sm font-medium">{String(label)}</p><p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-white/30">{String(meta)}</p></div>{i<3&&<ArrowRight className="size-4 text-white/20"/>}</div>)}</div><p className="mt-5 text-xs leading-5 text-white/35">Encrypted event data relays through the most reliable available path, with local storage protecting every missed connection.</p></div>
-      </div>
-    </div></section>
+  );
+}
 
-    <section id="tech-specs" className="relative py-28"><div className="absolute right-[-10%] top-20 size-[460px] rounded-full bg-teal-500/[.07] blur-[120px]"/><div className="relative mx-auto max-w-7xl px-5 lg:px-8"><div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"><div><p className="text-xs font-medium uppercase tracking-[.22em] text-[#00C9A7]">Designed around dignity</p><h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-.04em] sm:text-6xl">Invisible complexity.<br/>Effortless care.</h2></div><p className="max-w-sm text-sm leading-7 text-white/45">Every technical choice removes a task from your parent’s day while keeping the family informed.</p></div>
-      <div className="mt-14 grid gap-4 md:grid-cols-2">{[
-        {Icon:ShieldCheck,title:'Zero elderly burden',copy:'One physical button for SOS, acknowledgement, and cancellation. No touchscreen, menus, passwords, or learning curve.',tag:'One-button UX'},
-        {Icon:MemoryStick,title:'Offline flash memory',copy:'Onboard SPI flash preserves up to 500 event logs and medication reminders through Bluetooth or Wi-Fi drops.',tag:'500 local events'},
-        {Icon:Smartphone,title:'Caregiver remote control',copy:'Family sets schedules remotely. The pendant handles private, local reminder delivery without interrupting independence.',tag:'Remote schedules'},
-        {Icon:Users,title:'Care Circle escalation',copy:'Alerts route across children, neighbours, and trusted caregivers in a resilient, configurable order.',tag:'Multi-tier safety'}
-      ].map(({Icon,title,copy,tag})=><motion.article whileHover={{scale:1.012}} key={title} className="glass group rounded-[28px] p-7 md:p-8"><div className="flex items-start justify-between"><div className="grid size-12 place-items-center rounded-2xl bg-[#00C9A7]/10 text-[#00C9A7] transition group-hover:bg-[#00C9A7] group-hover:text-[#07130f]"><Icon className="size-5"/></div><span className="rounded-full border border-white/10 px-3 py-1 text-[9px] uppercase tracking-wider text-white/35">{tag}</span></div><h3 className="mt-12 text-2xl font-semibold tracking-tight">{title}</h3><p className="mt-3 max-w-xl text-sm leading-7 text-white/45">{copy}</p></motion.article>)}</div>
-      <div className="mt-4 flex items-center justify-between rounded-[24px] border border-white/10 bg-white/[.025] px-6 py-5"><div className="flex items-center gap-3"><WifiOff className="size-5 text-[#00C9A7]"/><span className="text-sm">Works through internet drops</span></div><span className="hidden font-mono text-xs text-white/30 sm:block">LOCAL FIRST · CLOUD CONNECTED</span></div>
-    </div></section>
+export function LoomCareLanding() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [activeRoadmap, setActiveRoadmap] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const progress = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
-    <section id="roadmap" className="border-y border-white/10 bg-[#0d131c] py-28"><div className="mx-auto max-w-7xl px-5 lg:px-8"><p className="text-xs font-medium uppercase tracking-[.22em] text-[#00C9A7]">Vision horizon</p><h2 className="mt-4 text-4xl font-semibold tracking-[-.04em] sm:text-6xl">A platform that grows with care.</h2>
-      <div role="tablist" aria-label="Product roadmap" className="mt-12 grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-2 md:grid-cols-4">{['V1 Care','V2 Voice','V3 Connect','V4 Intelligence'].map((label,i)=><button key={label} role="tab" aria-selected={roadmap===i} onClick={()=>setRoadmap(i)} className={`rounded-xl px-4 py-3 text-sm transition ${roadmap===i?'bg-[#00C9A7] font-semibold text-[#04110f]':'text-white/45 hover:bg-white/5 hover:text-white'}`}>{label}</button>)}</div>
-      <div className="glass mt-5 grid min-h-[360px] gap-10 rounded-[32px] p-7 md:grid-cols-[.85fr_1.15fr] md:p-12"><div><span className="font-mono text-sm text-[#00C9A7]">0{roadmap+1} / 04</span><h3 className="mt-7 text-4xl font-semibold tracking-[-.04em]">{['Foundation of safety','A familiar voice','Freedom from the phone','A living health picture'][roadmap]}</h3><p className="mt-5 text-sm leading-7 text-white/45">{['Reliable fall detection, physical SOS, offline reminders, and a secure phone gateway relay.','Spoken medication names and recorded reminders in the voices that feel most familiar.','Direct cellular eSIM, precise GPS, and two-way calls—with no phone required nearby.','Blood pressure, oxygen, and glucose signals transformed into long-term, useful health insight.'][roadmap]}</p></div><div className="grid content-center gap-3">{[
-        ['Fall detection','Physical SOS','Offline reminders','Phone gateway'],['Spoken medicine names','Family voice recordings','Adaptive volume','Language packs'],['Cellular eSIM','GPS location','Two-way calling','No phone required'],['Connected vitals','Longitudinal insights','Care-team sharing','Proactive patterns']
-      ][roadmap].map((item,i)=><motion.div initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} transition={{delay:i*.06}} key={`${roadmap}-${item}`} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[.035] px-5 py-4"><span className="grid size-7 place-items-center rounded-full bg-[#00C9A7]/12"><Check className="size-3.5 text-[#00C9A7]"/></span><span className="text-sm">{item}</span></motion.div>)}</div></div>
-    </div></section>
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && (setMenuOpen(false), setAuthOpen(false));
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
-    <section id="waitlist" className="relative px-5 py-28 lg:px-8"><div className="absolute left-1/2 top-1/2 size-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00C9A7]/10 blur-[150px]"/><div className="glass teal-shadow relative mx-auto grid max-w-6xl overflow-hidden rounded-[36px] lg:grid-cols-[.85fr_1.15fr]"><div className="border-b border-white/10 bg-white/[.025] p-8 lg:border-b-0 lg:border-r lg:p-12"><p className="text-xs uppercase tracking-[.2em] text-[#00C9A7]">Founding families</p><h2 className="mt-5 text-4xl font-semibold tracking-[-.045em]">Help shape safer independence.</h2><p className="mt-5 text-sm leading-7 text-white/45">Join the priority list for product updates, early access, and a chance to test Loom Care hardware at home.</p><div className="mt-10 space-y-4">{['Early hardware beta consideration','Direct input into product design','Founding-family launch access'].map(x=><div key={x} className="flex items-center gap-3 text-sm text-white/65"><span className="grid size-6 place-items-center rounded-full bg-[#00C9A7]/10"><Check className="size-3 text-[#00C9A7]"/></span>{x}</div>)}</div><button onClick={()=>setAuthOpen(true)} className="mt-10 flex w-full items-center justify-center gap-3 rounded-xl border border-white/12 bg-white/[.05] px-5 py-3 text-sm font-medium hover:bg-white/[.08]"><span className="grid size-5 place-items-center rounded-full bg-white text-[10px] font-bold text-[#4285F4]">G</span>Continue with Google</button></div>
-        <form onSubmit={joinWaitlist} className="p-8 lg:p-12"><div className="grid gap-5 sm:grid-cols-2"><label className="text-xs text-white/45">Full name<input name="name" required className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-white/[.045] px-4 text-sm text-white outline-none focus:border-[#00C9A7]/60" placeholder="Priya Sharma"/></label><label className="text-xs text-white/45">Email address<input name="email" type="email" required className="mt-2 h-12 w-full rounded-xl border border-white/10 bg-white/[.045] px-4 text-sm text-white outline-none focus:border-[#00C9A7]/60" placeholder="priya@example.com"/></label></div><label className="mt-5 block text-xs text-white/45">Your role<select name="role" className="mt-2 h-12 w-full appearance-none rounded-xl border border-white/10 bg-[#111923] px-4 text-sm text-white outline-none focus:border-[#00C9A7]/60"><option>Adult Child / Caregiver</option><option>Elderly Parent</option><option>Healthcare Professional</option></select></label><label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[.025] p-4"><input name="isBetaTester" type="checkbox" className="mt-0.5 size-4 accent-[#00C9A7]"/><span><span className="block text-sm font-medium">Apply for hardware beta test</span><span className="mt-1 block text-xs leading-5 text-white/35">I’m open to testing an early prototype and sharing feedback.</span></span></label><button disabled={status==='loading'} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#00C9A7] text-sm font-semibold text-[#04110f] disabled:opacity-60">{status==='loading'?'Joining…':'Join the Loom Care waitlist'}<ArrowRight className="size-4"/></button><div aria-live="polite" className="mt-4 min-h-5 text-center text-xs">{status==='success'&&<span className="text-[#00C9A7]">You’re on the list. Welcome to the Care Circle.</span>}{status==='error'&&<span className="text-[#FF777B]">We couldn’t save that just now. Please try again.</span>}</div></form>
-      </div></section>
+  async function joinWaitlist(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus('loading');
+    const data = Object.fromEntries(new FormData(event.currentTarget));
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, isBetaTester: data.isBetaTester === 'on' }),
+      });
+      if (!response.ok) throw new Error('Unable to join');
+      setStatus('success'); event.currentTarget.reset();
+    } catch { setStatus('error'); }
+  }
 
-    <footer className="border-t border-white/10 px-5 py-8"><div className="mx-auto flex max-w-7xl flex-col gap-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><HeartPulse className="size-4 text-[#00C9A7]"/><span>© 2026 Loom Care. Concept & R&amp;D.</span></div><div className="flex flex-wrap gap-6"><a href="#concept" className="hover:text-white">Hardware vision</a><a href="#" className="hover:text-white">Privacy policy</a><a href="#" className="hover:text-white">Terms of service</a></div></div></footer>
+  return (
+    <main className="site-shell">
+      <motion.div className="scroll-progress" style={{ width: progress }} />
 
-    {authOpen&&<div role="dialog" aria-modal="true" aria-labelledby="auth-title" className="fixed inset-0 z-[90] grid place-items-center bg-black/75 p-5 backdrop-blur-md" onMouseDown={e=>{if(e.target===e.currentTarget)setAuthOpen(false)}}><div className="glass relative w-full max-w-md rounded-[28px] p-7"><button onClick={()=>setAuthOpen(false)} aria-label="Close sign in" className="absolute right-5 top-5 grid size-8 place-items-center rounded-full bg-white/5 text-white/50 hover:text-white"><X className="size-4"/></button><div className="grid size-12 place-items-center rounded-2xl bg-[#00C9A7]/10"><HeartPulse className="size-5 text-[#00C9A7]"/></div><h2 id="auth-title" className="mt-6 text-2xl font-semibold">Welcome to Loom Care</h2><p className="mt-2 text-sm leading-6 text-white/45">Sign in to manage your waitlist profile and future Care Circle access.</p><button onClick={signInWithGoogle} className="mt-7 flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-white font-medium text-[#0b0f17]"><span className="font-bold text-[#4285F4]">G</span>Continue with Google</button><div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-white/25"><span className="h-px flex-1 bg-white/10"/>or email link<span className="h-px flex-1 bg-white/10"/></div><input value={signInEmail} onChange={e=>setSignInEmail(e.target.value)} type="email" placeholder="you@example.com" aria-label="Sign-in email" className="h-12 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 text-sm outline-none focus:border-[#00C9A7]/60"/><button onClick={sendMagicLink} className="mt-3 h-12 w-full rounded-xl border border-white/12 text-sm font-medium hover:bg-white/5">Send magic link</button><p aria-live="polite" className="mt-5 min-h-5 text-center text-[11px] leading-5 text-white/35">{authMessage||'Secure sign-in powered by Firebase.'}</p></div></div>}
-  </main>;
+      <header className="topbar">
+        <a href="#top" className="brand" aria-label="Loom Care home"><span className="brand-mark"><Heart className="size-4" fill="currentColor" /></span>LOOM CARE</a>
+        <nav className="desktop-nav" aria-label="Main navigation"><a href="#story">How it cares</a><a href="#details">The pendant</a><a href="#roadmap">Our future</a></nav>
+        <div className="nav-actions"><button className="text-button" onClick={() => setAuthOpen(true)}>Sign in</button><a href="#waitlist" className="pill-button">Join the first circle <ArrowRight className="size-4" /></a><button className="menu-button" aria-label="Open menu" onClick={() => setMenuOpen(true)}><span/><span/></button></div>
+      </header>
+
+      <section id="top" className="hero">
+        <div className="hero-orb hero-orb-blue" /><div className="hero-orb hero-orb-pink" />
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .9, ease }} className="hero-copy">
+          <div className="soft-badge"><Sparkles className="size-3.5" /> Care that stays quietly close</div>
+          <h1>Let them live freely.<br/><em>We’ll keep watch.</em></h1>
+          <p>Loom Care is a simple pendant that notices a fall, remembers medicines, and brings family closer—without turning life into a dashboard.</p>
+          <div className="hero-buttons"><a href="#story" className="primary-button">See how it cares <ArrowDown className="size-4" /></a><button onClick={() => setAuthOpen(true)} className="secondary-button">I’m a caregiver</button></div>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, scale: .94, rotate: 2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ duration: 1.1, delay: .15, ease }} className="hero-photo-wrap">
+          <Image src="/loom-family.png" alt="An Indian mother and daughter sharing a warm moment at home" fill priority sizes="(max-width: 900px) 90vw, 46vw" className="hero-photo" />
+          <div className="photo-note note-one"><span className="note-icon blue"><ShieldCheck className="size-4" /></span><span><b>All is well</b><small>Home · just now</small></span></div>
+          <div className="photo-note note-two"><span className="note-icon pink"><Pill className="size-4" /></span><span><b>Medicine taken</b><small>8:02 PM</small></span></div>
+        </motion.div>
+        <div className="hero-foot"><span>Built for parents</span><i/><span>Designed with caregivers</span><i/><span>Made in India</span></div>
+      </section>
+
+      <section id="story" className="story-intro">
+        <p>A small object.<br/>A very human promise.</p>
+        <h2>Every ordinary day deserves<br/><em>a quiet safety net.</em></h2>
+        <ArrowDown className="story-arrow" />
+      </section>
+
+      <Chapter index="01" eyebrow="It arrives like a gift" title="Open the box. Keep the independence." copy="No intimidating kit. No instruction manual the size of a novel. One soft pendant, a charging nest, and a promise you can understand." tone="chapter-blue">
+        <div className="unbox-scene"><div className="box-lid"><span>LOOM CARE</span></div><div className="box-base"><div className="box-inset"><Pendant /></div></div><div className="ribbon ribbon-a"/><div className="ribbon ribbon-b"/></div>
+      </Chapter>
+
+      <Chapter index="02" eyebrow="Most days, nothing happens" title="Care lives quietly in the background." copy="It nudges for medicine, stores reminders even when the internet disappears, and never asks your parent to learn another screen." tone="chapter-pink">
+        <div className="day-scene"><div className="sun-disc"/><div className="day-card card-medicine"><span className="day-icon"><Pill className="size-5" /></span><p>8:00 PM</p><b>Time for the blue tablet</b><small>Tap the pendant once</small></div><div className="day-card card-offline"><span className="status-dot"/><p>Quietly ready</p><b>Works through internet drops</b><small>500 reminders kept safely</small></div><div className="floating-pendant"><Pendant /></div></div>
+      </Chapter>
+
+      <Chapter index="03" eyebrow="If a fall happens" title="It asks first. Then it acts." copy="A gentle vibration creates a 20-second grace window. If there’s no response, Loom Care starts the family’s safety chain—calmly, clearly, immediately." tone="chapter-coral">
+        <div className="fall-scene"><div className="alert-rings"><span/><span/><span/></div><Pendant alert/><div className="count-card"><small>Are you okay?</small><strong>20</strong><p>Press once to cancel</p></div><div className="signal-path"><span>Detected</span><ArrowRight/><span>Checked</span><ArrowRight/><span>Shared</span></div></div>
+      </Chapter>
+
+      <Chapter index="04" eyebrow="Your circle closes in" title="The right people know. In the right order." copy="Children, neighbours, and trusted caregivers receive a clear alert with time and location. Nobody has to guess who is helping." tone="chapter-lilac">
+        <div className="circle-scene"><div className="phone-card"><div className="phone-top"><span className="live-dot"/>Loom Care alert<small>now</small></div><div className="parent-row"><span>AS</span><div><b>Asha may need help</b><p>Fall detected at home</p></div></div><div className="map-card"><MapPin className="size-5"/><div><b>Home</b><p>Koramangala · 2 min away</p></div></div><button><Phone className="size-4"/>Call Asha</button></div><div className="person-bubble person-one">P</div><div className="person-bubble person-two">R</div><div className="person-bubble person-three">N</div><svg className="circle-lines" viewBox="0 0 500 500"><path d="M80 90 C200 200 160 250 250 280"/><path d="M440 100 C320 180 340 240 250 280"/><path d="M420 410 C340 350 330 310 250 280"/></svg></div>
+      </Chapter>
+
+      <section id="details" className="details-section">
+        <div className="details-head"><p>Less technology to manage.<br/>More life to live.</p><h2>Thoughtful in the<br/><em>smallest details.</em></h2></div>
+        <div className="feature-grid">
+          {[
+            { icon: Radio, number: '01', title: 'One button. That’s it.', copy: 'SOS, acknowledge, or cancel. No menus. No passwords. No new habits.' },
+            { icon: BellRing, number: '02', title: 'Reminders that feel kind.', copy: 'A chime and a gentle pulse—not another loud, anxious notification.' },
+            { icon: ShieldCheck, number: '03', title: 'Offline means still on.', copy: 'Important events stay on the pendant until connection comes back.' },
+            { icon: Users, number: '04', title: 'A circle, not a call centre.', copy: 'Help moves through family, neighbours, and trusted caregivers.' },
+          ].map(({ icon: Icon, number, title, copy }) => <motion.article key={number} whileHover={{ y: -8 }} className="feature-card"><div><span>{number}</span><Icon className="size-6" /></div><h3>{title}</h3><p>{copy}</p></motion.article>)}
+        </div>
+      </section>
+
+      <section id="roadmap" className="roadmap-section">
+        <div className="roadmap-title"><p>One gentle step at a time</p><h2>The care story<br/><em>keeps growing.</em></h2></div>
+        <div className="roadmap-tabs" role="tablist" aria-label="Loom Care roadmap">{['Care','Voice','Connect','Insight'].map((label, i) => <button key={label} role="tab" aria-selected={activeRoadmap === i} onClick={() => setActiveRoadmap(i)}><span>0{i + 1}</span>{label}</button>)}</div>
+        <motion.div key={activeRoadmap} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45 }} className="roadmap-panel">
+          <div><small>{['HERE NOW','COMING NEXT','ON THE HORIZON','OUR BIG PICTURE'][activeRoadmap]}</small><h3>{['Safety that asks nothing of them.','Reminders in the voices they love.','Freedom that travels beyond home.','Health patterns that finally make sense.'][activeRoadmap]}</h3><p>{['Fall detection, physical SOS, offline medicine reminders, and the family phone relay.','Spoken medicine names and recorded messages from children and grandchildren.','A direct eSIM, location sharing, and two-way calls without a nearby phone.','Connected blood pressure, oxygen, and glucose signals understood over time.'][activeRoadmap]}</p></div>
+          <div className={`roadmap-object object-${activeRoadmap}`}><span className="roadmap-heart"><Heart fill="currentColor" /></span>{activeRoadmap === 0 && <Pendant/>}{activeRoadmap === 1 && <MessageCircleHeart className="roadmap-big-icon"/>}{activeRoadmap === 2 && <MapPin className="roadmap-big-icon"/>}{activeRoadmap === 3 && <HeartPulse className="roadmap-big-icon"/>}</div>
+        </motion.div>
+      </section>
+
+      <section id="waitlist" className="waitlist-section">
+        <div className="envelope-scene"><div className="envelope-back"/><motion.div initial={{ y: 80 }} whileInView={{ y: 0 }} viewport={{ amount: .6 }} transition={{ duration: .8, ease }} className="letter"><Heart className="size-6" fill="currentColor"/><small>AN INVITATION FOR YOUR FAMILY</small><h2>Help us make care<br/>feel more human.</h2><p>Join our first circle for early access, honest product updates, and a chance to shape the hardware beta.</p>
+          <form onSubmit={joinWaitlist} className="waitlist-form"><div className="form-row"><label>Full name<input name="name" required placeholder="Your name"/></label><label>Email address<input name="email" type="email" required placeholder="you@example.com"/></label></div><label>Your role<select name="role"><option>Adult Child / Caregiver</option><option>Elderly Parent</option><option>Healthcare Professional</option></select></label><label className="check-row"><input name="isBetaTester" type="checkbox"/>I’d like to test an early pendant with my family.</label><button disabled={status === 'loading'}>{status === 'loading' ? 'Joining…' : 'Join the first circle'}<ArrowRight className="size-4"/></button><div className="form-message" aria-live="polite">{status === 'success' && 'You’re in. Welcome to the circle.'}{status === 'error' && 'That didn’t go through. Please try once more.'}</div></form>
+        </motion.div><div className="envelope-front"><span>With care, from Loom.</span></div></div>
+      </section>
+
+      <footer><div className="footer-brand"><span className="brand-mark"><Heart className="size-4" fill="currentColor"/></span><b>LOOM CARE</b><p>Because independence and safety<br/>should never be opposites.</p></div><div className="footer-links"><div><b>Explore</b><a href="#story">How it cares</a><a href="#details">The pendant</a><a href="#roadmap">Our future</a></div><div><b>Legal</b><a href="#">Privacy</a><a href="#">Terms</a><a href="mailto:hello@loom.care">Contact</a></div></div><span className="footer-note">Made with care in India · © 2026</span></footer>
+
+      {(menuOpen || authOpen) && <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) { setMenuOpen(false); setAuthOpen(false); } }}>
+        {menuOpen ? <div className="mobile-menu"><button onClick={() => setMenuOpen(false)} aria-label="Close menu"><X/></button><a href="#story" onClick={() => setMenuOpen(false)}>How it cares</a><a href="#details" onClick={() => setMenuOpen(false)}>The pendant</a><a href="#roadmap" onClick={() => setMenuOpen(false)}>Our future</a><a href="#waitlist" onClick={() => setMenuOpen(false)}>Join the first circle</a></div> : <div className="auth-modal"><button className="close-modal" onClick={() => setAuthOpen(false)} aria-label="Close sign in"><X/></button><span className="auth-heart"><Heart fill="currentColor"/></span><small>WELCOME BACK</small><h2>Your care circle,<br/>all in one place.</h2><button className="google-button"><b>G</b>Continue with Google</button><div className="or"><span/>or use a magic link<span/></div><input type="email" placeholder="you@example.com" aria-label="Email address"/><button className="magic-button">Send my magic link</button><p>Sign-in activates when the Firebase keys are connected.</p></div>}
+      </div>}
+    </main>
+  );
 }
