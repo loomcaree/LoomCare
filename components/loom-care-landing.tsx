@@ -29,13 +29,15 @@ function Chapter({
 }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const visualY = useTransform(scrollYProgress, [0, .5, 1], [90, 0, -70]);
-  const visualRotate = useTransform(scrollYProgress, [0, .5, 1], [-4, 0, 4]);
+  const visualY = useTransform(scrollYProgress, [0, .5, 1], [72, 0, -54]);
+  const visualRotate = useTransform(scrollYProgress, [0, .5, 1], [-3, 0, 3]);
+  const copyOpacity = useTransform(scrollYProgress, [.06, .44], [0, 1]);
+  const copyY = useTransform(scrollYProgress, [.06, .46], [56, 0]);
   return (
     <section ref={ref} className={`story-chapter ${tone}`}>
       <div className="story-sticky">
         <motion.div style={{ y: visualY, rotate: visualRotate }} className="story-visual">{children}</motion.div>
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ amount: .55 }} transition={{ duration: .8, ease }} className="story-copy">
+        <motion.div style={{ opacity: copyOpacity, y: copyY }} className="story-copy">
           <span className="chapter-number">{index}</span>
           <p>{eyebrow}</p>
           <h2>{title}</h2>
