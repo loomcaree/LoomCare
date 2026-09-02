@@ -38,3 +38,8 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# Local Firebase CLI state and TypeScript cache
+/.firebase/
+firebase-debug*.log
+*.tsbuildinfo
