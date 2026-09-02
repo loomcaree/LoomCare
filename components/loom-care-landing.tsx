@@ -35,13 +35,13 @@ export function LoomCareLanding() {
   const [authOpen, setAuthOpen] = useState(false);
   const { scrollYProgress: heroProgress } = useScroll({ target:heroRef, offset:['start start','end end'] });
   const { scrollYProgress: blueprintProgress } = useScroll({ target:blueprintRef, offset:['start start','end end'] });
-  const lidRotate = useTransform(heroProgress,[0,.25,.56],[0,-12,-112]);
-  const pendantY = useTransform(heroProgress,[0,.28,.62,.9],[88,75,-120,-170]);
-  const pendantScale = useTransform(heroProgress,[0,.5,.9],[.74,1,1.18]);
-  const heroTextOpacity = useTransform(heroProgress,[0,.38,.63],[1,1,0]);
-  const boxOpacity = useTransform(heroProgress,[0,.55,.84],[1,1,0]);
-  const flipRotate = useTransform(blueprintProgress,[.08,.8],[0,360]);
-  const flipScale = useTransform(blueprintProgress,[0,.5,1],[.9,1,.9]);
+  const lidRotate = useTransform(heroProgress,[0,.16,.72],[0,-12,-112]);
+  const pendantY = useTransform(heroProgress,[0,.14,.68,.96],[88,75,-120,-170]);
+  const pendantScale = useTransform(heroProgress,[0,.42,.96],[.74,1,1.18]);
+  const heroTextOpacity = useTransform(heroProgress,[0,.24,.5],[1,1,0]);
+  const boxOpacity = useTransform(heroProgress,[0,.68,.94],[1,1,0]);
+  const flipRotate = useTransform(blueprintProgress,[.015,.985],[0,360]);
+  const flipScale = useTransform(blueprintProgress,[0,.46,1],[.94,1,.94]);
   const global = useScroll();
   const progressWidth = useTransform(global.scrollYProgress,[0,1],['0%','100%']);
 
@@ -91,6 +91,22 @@ export function LoomCareLanding() {
         </div>
         <div className="scroll-cue"><span>SCROLL TO UNBOX</span><ArrowDown/></div>
       </div>
+    </section>
+
+    <section className="product-world" aria-label="Loom Care product ecosystem">
+      <div className="product-world-copy">
+        <p>01 · THE REAL-WORLD KIT</p>
+        <h2>One calm object.<br/><span>A complete family connection.</span></h2>
+        <small>The pendant stays physical and simple. Charging, schedules, alerts, and the Care Circle live around it—never on top of the wearer.</small>
+      </div>
+      <div className="product-scene">
+        <div className="scene-paper scene-blue"/><div className="scene-paper scene-pink"/>
+        <img src="/loom-care-ecosystem.png" alt="Loom Care pendant, charging dock and caregiver phone arranged as a real product kit" />
+        <div className="product-float float-sos"><ShieldCheck/><span><b>Physical SOS</b>Pressable by touch</span></div>
+        <div className="product-float float-offline"><Database/><span><b>Works offline</b>Reminders stay stored</span></div>
+        <div className="product-float float-circle"><UserRoundCheck/><span><b>Care Circle</b>Family receives context</span></div>
+      </div>
+      <div className="kit-strip"><span><b>7 day</b>battery target</span><span><b>BLE 5.3</b>phone gateway</span><span><b>1 button</b>SOS · cancel · confirm</span><span><b>38 g</b>wearable concept</span></div>
     </section>
 
     <section ref={blueprintRef} id="blueprint" className="blueprint-scroll">
