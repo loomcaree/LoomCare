@@ -1,172 +1,160 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
-  ArrowDown, ArrowRight, BellRing, Bluetooth, Check, ChevronRight, Cloud,
-  Cpu, Database, HeartPulse, Layers3, MemoryStick, Microchip, Radio,
-  ShieldCheck, Smartphone, Sparkles, TimerReset, UserRoundCheck, X,
+  ArrowDown, ArrowRight, BellRing, Check, Heart, HeartPulse, MapPin,
+  MessageCircleHeart, Phone, Pill, Radio, ShieldCheck, Sparkles, Users, X,
 } from 'lucide-react';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-function Pendant({ large = false, alert = false }: { large?: boolean; alert?: boolean }) {
-  return <div className={`fx-pendant ${large ? 'is-large' : ''} ${alert ? 'is-alert' : ''}`}>
-    <span className="pendant-loop" />
-    <div className="pendant-body"><HeartPulse/><span className="led"/><small>LOOM</small></div>
-  </div>;
+function Pendant({ alert = false }: { alert?: boolean }) {
+  return (
+    <div className={`pendant-shell ${alert ? 'pendant-alert' : ''}`} aria-label="Loom Care pendant illustration">
+      <span className="pendant-loop" />
+      <div className="pendant-face">
+        <HeartPulse className="size-8" strokeWidth={1.5} />
+        <span className="pendant-light" />
+      </div>
+    </div>
+  );
 }
 
-const roadmap = [
-  { v:'V1', name:'Care', status:'CURRENT CONCEPT', title:'Safety, without a new routine.', copy:'Fall detection, physical SOS, offline medication reminders, and a secure phone gateway relay.', tags:['Fall detection','Physical SOS','Offline reminders','Phone relay'] },
-  { v:'V2', name:'Voice', status:'NEXT HORIZON', title:'A familiar voice, right on time.', copy:'A tiny speaker adds spoken medicine names and recorded reminders from the people they love.', tags:['Integrated speaker','Family voice notes','Medicine names','Adaptive volume'] },
-  { v:'V3', name:'Connect', status:'FUTURE HORIZON', title:'Freedom beyond the phone.', copy:'Independent cellular eSIM, precise GPS, and two-way voice calls—no nearby phone required.', tags:['Direct eSIM','GPS tracking','Two-way calls','Phone independent'] },
-  { v:'V4', name:'Intelligence', status:'VISION HORIZON', title:'Health signals become a story.', copy:'Ambient sensors and connected BP, oxygen, and glucose monitors reveal useful long-term patterns.', tags:['Ambient sensors','Connected vitals','Health trends','Care insights'] },
-];
+function Chapter({
+  index, eyebrow, title, copy, tone, children,
+}: {
+  index: string; eyebrow: string; title: string; copy: string; tone: string; children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const visualY = useTransform(scrollYProgress, [0, .5, 1], [90, 0, -70]);
+  const visualRotate = useTransform(scrollYProgress, [0, .5, 1], [-4, 0, 4]);
+  return (
+    <section ref={ref} className={`story-chapter ${tone}`}>
+      <div className="story-sticky">
+        <motion.div style={{ y: visualY, rotate: visualRotate }} className="story-visual">{children}</motion.div>
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ amount: .55 }} transition={{ duration: .8, ease }} className="story-copy">
+          <span className="chapter-number">{index}</span>
+          <p>{eyebrow}</p>
+          <h2>{title}</h2>
+          <div className="story-rule" />
+          <span className="story-description">{copy}</span>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
 
 export function LoomCareLanding() {
-  const heroRef = useRef<HTMLElement>(null);
-  const blueprintRef = useRef<HTMLElement>(null);
-  const [roadmapIndex, setRoadmapIndex] = useState(0);
-  const [countdown, setCountdown] = useState(20);
-  const [counting, setCounting] = useState(false);
-  const [ticket, setTicket] = useState<{ name:string; code:string; position:number } | null>(null);
-  const [formStatus, setFormStatus] = useState<'idle'|'loading'|'error'>('idle');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const { scrollYProgress: heroProgress } = useScroll({ target:heroRef, offset:['start start','end end'] });
-  const { scrollYProgress: blueprintProgress } = useScroll({ target:blueprintRef, offset:['start start','end end'] });
-  const lidRotate = useTransform(heroProgress,[0,.16,.72],[0,-12,-112]);
-  const pendantY = useTransform(heroProgress,[0,.14,.68,.96],[88,75,-120,-170]);
-  const pendantScale = useTransform(heroProgress,[0,.42,.96],[.74,1,1.18]);
-  const heroTextOpacity = useTransform(heroProgress,[0,.24,.5],[1,1,0]);
-  const boxOpacity = useTransform(heroProgress,[0,.68,.94],[1,1,0]);
-  const flipRotate = useTransform(blueprintProgress,[.015,.985],[0,360]);
-  const flipScale = useTransform(blueprintProgress,[0,.46,1],[.94,1,.94]);
-  const global = useScroll();
-  const progressWidth = useTransform(global.scrollYProgress,[0,1],['0%','100%']);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [activeRoadmap, setActiveRoadmap] = useState(0);
+  const { scrollYProgress } = useScroll();
+  const progress = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   useEffect(() => {
-    if (!counting || countdown <= 0) return;
-    const timer = window.setTimeout(() => setCountdown(value => value - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [counting,countdown]);
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && (setMenuOpen(false), setAuthOpen(false));
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
-  async function submitWaitlist(event:FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setFormStatus('loading');
-    const form = event.currentTarget; const values = Object.fromEntries(new FormData(form));
+  async function joinWaitlist(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus('loading');
+    const data = Object.fromEntries(new FormData(event.currentTarget));
     try {
-      const response = await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...values,isBetaTester:values.isBetaTester==='on'})});
-      const result = await response.json(); if(!response.ok) throw new Error();
-      const code = `LOOM-${String(result.id || Date.now()).slice(-6).toUpperCase()}`;
-      setTicket({name:String(values.name).split(' ')[0] || 'Friend',code,position:184 + Math.floor(Math.random()*70)});
-      form.reset(); setFormStatus('idle');
-    } catch { setFormStatus('error'); }
+      const response = await fetch('/api/waitlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, isBetaTester: data.isBetaTester === 'on' }),
+      });
+      if (!response.ok) throw new Error('Unable to join');
+      setStatus('success'); event.currentTarget.reset();
+    } catch { setStatus('error'); }
   }
 
-  return <main className="dark-site">
-    <motion.div className="page-progress" style={{width:progressWidth}} />
-    <div className="ambient-grid"/><div className="noise-layer"/>
+  return (
+    <main className="site-shell">
+      <motion.div className="scroll-progress" style={{ width: progress }} />
 
-    <header className="glass-nav">
-      <a href="#concept" className="wordmark"><span className="brand-led"/>Loom Care <small>PHASE 1 · R&amp;D ACTIVE</small></a>
-      <nav><a href="#concept">Concept</a><a href="#shield">Safety Shield</a><a href="#blueprint">Blueprint</a><a href="#roadmap">Roadmap</a></nav>
-      <div><button onClick={()=>setAuthOpen(true)} className="signin">Sign in</button><a href="#waitlist" className="waitlist-cta">Join Waitlist <ArrowRight/></a></div>
-    </header>
+      <header className="topbar">
+        <a href="#top" className="brand" aria-label="Loom Care home"><span className="brand-mark"><Heart className="size-4" fill="currentColor" /></span>LOOM CARE</a>
+        <nav className="desktop-nav" aria-label="Main navigation"><a href="#story">How it cares</a><a href="#details">The pendant</a><a href="#roadmap">Our future</a></nav>
+        <div className="nav-actions"><button className="text-button" onClick={() => setAuthOpen(true)}>Sign in</button><a href="#waitlist" className="pill-button">Join the first circle <ArrowRight className="size-4" /></a><button className="menu-button" aria-label="Open menu" onClick={() => setMenuOpen(true)}><span/><span/></button></div>
+      </header>
 
-    <section ref={heroRef} id="concept" className="hero-scroll">
-      <div className="hero-sticky">
-        <div className="hero-light one"/><div className="hero-light two"/>
-        <motion.div style={{opacity:heroTextOpacity}} className="hero-message">
-          <p><Sparkles/> Household-first elder safety</p>
-          <h1>Independence for Them.<br/><span>Complete Peace of Mind</span> for You.</h1>
-          <div className="hero-lower"><span>A discreet fall-detection pendant with zero tech burden—built to protect the life they already love.</span><a href="#shield">Discover the shield <ArrowDown/></a></div>
+      <section id="top" className="hero">
+        <div className="hero-orb hero-orb-blue" /><div className="hero-orb hero-orb-pink" />
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .9, ease }} className="hero-copy">
+          <div className="soft-badge"><Sparkles className="size-3.5" /> Care that stays quietly close</div>
+          <h1>Let them live freely.<br/><em>We’ll keep watch.</em></h1>
+          <p>Loom Care is a simple pendant that notices a fall, remembers medicines, and brings family closer—without turning life into a dashboard.</p>
+          <div className="hero-buttons"><a href="#story" className="primary-button">See how it cares <ArrowDown className="size-4" /></a><button onClick={() => setAuthOpen(true)} className="secondary-button">I’m a caregiver</button></div>
         </motion.div>
-        <div className="unbox-stage">
-          <motion.div style={{opacity:boxOpacity}} className="luxury-box">
-            <motion.div style={{rotateX:lidRotate}} className="luxury-lid"><div className="lid-inner"/><span>LOOM CARE</span></motion.div>
-            <div className="luxury-base"><div className="box-bed"/></div>
-          </motion.div>
-          <motion.div style={{y:pendantY,scale:pendantScale}} className="hero-pendant"><Pendant large/></motion.div>
-          <div className="telemetry chip-one"><span>BLE 5.3</span><b>CONNECTED</b></div><div className="telemetry chip-two"><span>BATTERY</span><b>07 DAYS</b></div>
-        </div>
-        <div className="scroll-cue"><span>SCROLL TO UNBOX</span><ArrowDown/></div>
-      </div>
-    </section>
-
-    <section className="product-world" aria-label="Loom Care product ecosystem">
-      <div className="product-world-copy">
-        <p>01 · THE REAL-WORLD KIT</p>
-        <h2>One calm object.<br/><span>A complete family connection.</span></h2>
-        <small>The pendant stays physical and simple. Charging, schedules, alerts, and the Care Circle live around it—never on top of the wearer.</small>
-      </div>
-      <div className="product-scene">
-        <div className="scene-paper scene-blue"/><div className="scene-paper scene-pink"/>
-        <img src="/loom-care-ecosystem.png" alt="Loom Care pendant, charging dock and caregiver phone arranged as a real product kit" />
-        <div className="product-float float-sos"><ShieldCheck/><span><b>Physical SOS</b>Pressable by touch</span></div>
-        <div className="product-float float-offline"><Database/><span><b>Works offline</b>Reminders stay stored</span></div>
-        <div className="product-float float-circle"><UserRoundCheck/><span><b>Care Circle</b>Family receives context</span></div>
-      </div>
-      <div className="kit-strip"><span><b>7 day</b>battery target</span><span><b>BLE 5.3</b>phone gateway</span><span><b>1 button</b>SOS · cancel · confirm</span><span><b>38 g</b>wearable concept</span></div>
-    </section>
-
-    <section ref={blueprintRef} id="blueprint" className="blueprint-scroll">
-      <div className="blueprint-sticky">
-        <div className="section-label"><span>02</span> HARDWARE BLUEPRINT</div>
-        <motion.div style={{rotateY:flipRotate,scale:flipScale}} className="flip-card">
-          <div className="flip-face flip-front"><Pendant large/><p>THE PENDANT</p><small>64 × 48 × 12 MM · 38 G</small></div>
-          <div className="flip-face flip-back">
-            <div className="exploded-part part-shell">SHELL</div><div className="exploded-part part-board"><Microchip/><span>PCB</span></div><div className="exploded-part part-battery">LiPo</div><div className="exploded-part part-back">BACK</div>
-            <div className="blueprint-callout callout-a"><i/><span><b>Nordic nRF52</b>Ultra-low power BLE MCU</span></div>
-            <div className="blueprint-callout callout-b"><i/><span><b>6-Axis IMU</b>Fall motion array</span></div>
-            <div className="blueprint-callout callout-c"><i/><span><b>Tactile Button</b>SOS · Cancel · ACK</span></div>
-            <div className="blueprint-callout callout-d"><i/><span><b>SPI Flash</b>500 offline event logs</span></div>
-          </div>
+        <motion.div initial={{ opacity: 0, scale: .94, rotate: 2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} transition={{ duration: 1.1, delay: .15, ease }} className="hero-photo-wrap">
+          <Image src="/loom-family.png" alt="An Indian mother and daughter sharing a warm moment at home" fill priority sizes="(max-width: 900px) 90vw, 46vw" className="hero-photo" />
+          <div className="photo-note note-one"><span className="note-icon blue"><ShieldCheck className="size-4" /></span><span><b>All is well</b><small>Home · just now</small></span></div>
+          <div className="photo-note note-two"><span className="note-icon pink"><Pill className="size-4" /></span><span><b>Medicine taken</b><small>8:02 PM</small></span></div>
         </motion.div>
-        <div className="flip-copy"><p>ONE OBJECT. FOUR CRITICAL LAYERS.</p><h2>Precision hardware.<br/><span>Quietly human.</span></h2></div>
-      </div>
-    </section>
+        <div className="hero-foot"><span>Built for parents</span><i/><span>Designed with caregivers</span><i/><span>Made in India</span></div>
+      </section>
 
-    <section id="shield" className="shield-intro"><p>03 · THE SAFETY SHIELD</p><h2>When a fall happens,<br/><span>every second has a job.</span></h2></section>
-    <section className="card-deck">
-      <article className="deck-card card-impact">
-        <div className="deck-copy"><span>01 / IMPACT</span><h3>The pendant notices what the room cannot.</h3><p>Freefall, impact, angular shift, and stillness create one clear motion signature.</p><div className="metric-row"><b>6-AXIS</b><span>motion sensing</span><b>&lt; 180MS</b><span>impact analysis</span></div></div>
-        <div className="impact-visual"><div className="vector-field"><i/><i/><i/><i/><i/></div><Pendant alert/><div className="impact-wave"/><div className="imu-readout"><span>ACCEL Z</span><svg viewBox="0 0 280 80"><path d="M0 45 L45 44 L85 41 L112 5 L124 73 L140 20 L154 45 L280 45"/></svg><b>IMPACT SIGNATURE MATCHED</b></div></div>
-      </article>
-      <article className="deck-card card-grace">
-        <div className="deck-copy"><span>02 / LOCAL GRACE</span><h3>It asks before it calls for help.</h3><p>A vibration and audible chime give the wearer a calm, local false-alarm window.</p><button onClick={()=>{setCountdown(20);setCounting(true)}} className="demo-button"><TimerReset/> Restart demo</button></div>
-        <div className="grace-visual"><div className="count-ring" style={{'--count':countdown} as React.CSSProperties}><strong>{String(countdown).padStart(2,'0')}</strong><span>SECONDS</span></div><div className="grace-device"><Pendant large alert/><span className="vibration v1">)))</span><span className="vibration v2">(((</span></div><button onClick={()=>{setCounting(false);setCountdown(20)}}>PRESS TO CANCEL</button></div>
-      </article>
-      <article className="deck-card card-relay">
-        <div className="deck-copy"><span>03 / SIGNAL RELAY</span><h3>The alert finds the fastest path to family.</h3><p>Four encrypted handoffs turn one local event into a clear caregiver action.</p></div>
-        <div className="relay-visual">{[
-          {I:Bluetooth,t:'Pendant',s:'BLE 5.3'}, {I:Smartphone,t:'Parent Phone',s:'Kotlin Relay'}, {I:Cloud,t:'Loom Cloud',s:'Encrypted API'}, {I:BellRing,t:'Caregiver',s:'Priority Push'},
-        ].map(({I,t,s},i)=><div className="relay-unit" key={t}><div className="relay-node"><I/></div><b>{t}</b><small>{s}</small>{i<3&&<span className="relay-beam"><i/></span>}</div>)}</div>
-      </article>
-      <article className="deck-card card-override">
-        <div className="deck-copy"><span>04 / SHIELD ACTIVE</span><h3>Silent mode no longer means missed.</h3><p>A high-priority emergency screen carries the time, person, and incident context.</p><div className="active-badge"><span/> CARE CIRCLE NOTIFIED</div></div>
-        <div className="phone-stage"><div className="phone-model"><div className="phone-screen"><div className="dynamic-island"/><span className="alert-label">LOOM CARE · EMERGENCY</span><div className="alert-icon"><HeartPulse/></div><h4>Asha may need help</h4><p>Fall detected at home</p><div className="alert-log"><span>20:42:08</span><b>Impact detected</b><span>20:42:28</span><b>No cancellation</b><span>20:42:29</span><b>Care Circle alerted</b></div><button>Call Asha</button><button className="outline">I’m responding</button></div></div><div className="override-ring r1"/><div className="override-ring r2"/></div>
-      </article>
-    </section>
+      <section id="story" className="story-intro">
+        <p>A small object.<br/>A very human promise.</p>
+        <h2>Every ordinary day deserves<br/><em>a quiet safety net.</em></h2>
+        <ArrowDown className="story-arrow" />
+      </section>
 
-    <section id="roadmap" className="roadmap-dark">
-      <div className="roadmap-heading"><div><p>04 · VISION HORIZON</p><h2>Built in chapters.<br/><span>Designed for a lifetime.</span></h2></div><small>SCRUB THE TIMELINE<br/>TO EXPLORE THE SYSTEM</small></div>
-      <div className="version-track">{roadmap.map((item,i)=><button onClick={()=>setRoadmapIndex(i)} className={i<=roadmapIndex?'active':''} key={item.v}><span>{item.v}</span><b>{item.name}</b></button>)}</div>
-      <input aria-label="Roadmap version" className="roadmap-slider" type="range" min="0" max="3" step="1" value={roadmapIndex} onChange={e=>setRoadmapIndex(Number(e.target.value))}/>
-      <motion.div key={roadmapIndex} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:.45,ease}} className="version-panel"><div><small>{roadmap[roadmapIndex].status}</small><h3>{roadmap[roadmapIndex].title}</h3><p>{roadmap[roadmapIndex].copy}</p><div className="tag-grid">{roadmap[roadmapIndex].tags.map(tag=><span key={tag}><Check/>{tag}</span>)}</div></div><div className={`horizon-visual horizon-${roadmapIndex}`}><div className="horizon-core">{roadmapIndex===0&&<Pendant large/>}{roadmapIndex===1&&<Radio/>}{roadmapIndex===2&&<Smartphone/>}{roadmapIndex===3&&<Cpu/>}</div><span className="orbit o1"/><span className="orbit o2"/><span className="orbit o3"/></div></motion.div>
-    </section>
+      <Chapter index="01" eyebrow="It arrives like a gift" title="Open the box. Keep the independence." copy="No intimidating kit. No instruction manual the size of a novel. One soft pendant, a charging nest, and a promise you can understand." tone="chapter-blue">
+        <div className="unbox-scene"><div className="box-lid"><span>LOOM CARE</span></div><div className="box-base"><div className="box-inset"><Pendant /></div></div><div className="ribbon ribbon-a"/><div className="ribbon ribbon-b"/></div>
+      </Chapter>
 
-    <section id="waitlist" className="waitlist-zone">
-      <div className="portal-glow"/>
-      <div className={`waitlist-flipper ${ticket?'flipped':''}`}>
-        <div className="waitlist-side waitlist-front"><div className="portal-copy"><p><Sparkles/> EARLY ACCESS PORTAL</p><h2>Help build the<br/><span>first safety circle.</span></h2><small>Join for product updates, founding-family access, and a chance to test Loom Care hardware at home.</small><div className="trust-line"><UserRoundCheck/> Privacy first <i/> Limited beta places</div></div>
-          <form onSubmit={submitWaitlist}><div className="form-grid"><label>FULL NAME<input name="name" required placeholder="Aarav Mehta"/></label><label>EMAIL ADDRESS<input name="email" type="email" required placeholder="aarav@example.com"/></label></div><label>YOUR ROLE<select name="role"><option>Adult Child / Caregiver</option><option>Elderly Parent</option><option>Healthcare Professional</option></select></label><label className="beta-toggle"><input name="isBetaTester" type="checkbox"/><span/><div><b>Apply for hardware beta</b><small>Test an early pendant and share feedback</small></div></label><button disabled={formStatus==='loading'}>{formStatus==='loading'?'SECURING YOUR PLACE…':'JOIN THE VIP WAITLIST'}<ArrowRight/></button>{formStatus==='error'&&<p className="form-error">Unable to register yet. Connect Firebase or try again.</p>}</form>
+      <Chapter index="02" eyebrow="Most days, nothing happens" title="Care lives quietly in the background." copy="It nudges for medicine, stores reminders even when the internet disappears, and never asks your parent to learn another screen." tone="chapter-pink">
+        <div className="day-scene"><div className="sun-disc"/><div className="day-card card-medicine"><span className="day-icon"><Pill className="size-5" /></span><p>8:00 PM</p><b>Time for the blue tablet</b><small>Tap the pendant once</small></div><div className="day-card card-offline"><span className="status-dot"/><p>Quietly ready</p><b>Works through internet drops</b><small>500 reminders kept safely</small></div><div className="floating-pendant"><Pendant /></div></div>
+      </Chapter>
+
+      <Chapter index="03" eyebrow="If a fall happens" title="It asks first. Then it acts." copy="A gentle vibration creates a 20-second grace window. If there’s no response, Loom Care starts the family’s safety chain—calmly, clearly, immediately." tone="chapter-coral">
+        <div className="fall-scene"><div className="alert-rings"><span/><span/><span/></div><Pendant alert/><div className="count-card"><small>Are you okay?</small><strong>20</strong><p>Press once to cancel</p></div><div className="signal-path"><span>Detected</span><ArrowRight/><span>Checked</span><ArrowRight/><span>Shared</span></div></div>
+      </Chapter>
+
+      <Chapter index="04" eyebrow="Your circle closes in" title="The right people know. In the right order." copy="Children, neighbours, and trusted caregivers receive a clear alert with time and location. Nobody has to guess who is helping." tone="chapter-lilac">
+        <div className="circle-scene"><div className="phone-card"><div className="phone-top"><span className="live-dot"/>Loom Care alert<small>now</small></div><div className="parent-row"><span>AS</span><div><b>Asha may need help</b><p>Fall detected at home</p></div></div><div className="map-card"><MapPin className="size-5"/><div><b>Home</b><p>Koramangala · 2 min away</p></div></div><button><Phone className="size-4"/>Call Asha</button></div><div className="person-bubble person-one">P</div><div className="person-bubble person-two">R</div><div className="person-bubble person-three">N</div><svg className="circle-lines" viewBox="0 0 500 500"><path d="M80 90 C200 200 160 250 250 280"/><path d="M440 100 C320 180 340 240 250 280"/><path d="M420 410 C340 350 330 310 250 280"/></svg></div>
+      </Chapter>
+
+      <section id="details" className="details-section">
+        <div className="details-head"><p>Less technology to manage.<br/>More life to live.</p><h2>Thoughtful in the<br/><em>smallest details.</em></h2></div>
+        <div className="feature-grid">
+          {[
+            { icon: Radio, number: '01', title: 'One button. That’s it.', copy: 'SOS, acknowledge, or cancel. No menus. No passwords. No new habits.' },
+            { icon: BellRing, number: '02', title: 'Reminders that feel kind.', copy: 'A chime and a gentle pulse—not another loud, anxious notification.' },
+            { icon: ShieldCheck, number: '03', title: 'Offline means still on.', copy: 'Important events stay on the pendant until connection comes back.' },
+            { icon: Users, number: '04', title: 'A circle, not a call centre.', copy: 'Help moves through family, neighbours, and trusted caregivers.' },
+          ].map(({ icon: Icon, number, title, copy }) => <motion.article key={number} whileHover={{ y: -8 }} className="feature-card"><div><span>{number}</span><Icon className="size-6" /></div><h3>{title}</h3><p>{copy}</p></motion.article>)}
         </div>
-        <div className="waitlist-side waitlist-back"><div className="ticket-top"><span className="brand-led"/>LOOM CARE · FOUNDING CIRCLE</div><div className="ticket-body"><div className="ticket-check"><Check/></div><p>WELCOME, {ticket?.name?.toUpperCase()}</p><h2>You’re inside<br/>the first circle.</h2><div className="ticket-data"><span>QUEUE POSITION<b>#{ticket?.position}</b></span><span>REFERRAL CODE<b>{ticket?.code}</b></span></div><small>We’ll email you when a hardware beta place becomes available.</small><button onClick={()=>setTicket(null)}>Add another family <ArrowRight/></button></div><div className="ticket-bars">|||| ||| || ||||| ||| |||||| ||</div></div>
-      </div>
-    </section>
+      </section>
 
-    <footer className="dark-footer"><a href="#concept" className="wordmark"><span className="brand-led"/>Loom Care</a><p>Independence and safety should never be opposites.</p><div><a href="#blueprint">Hardware Vision</a><a href="#">Privacy</a><a href="#">Terms</a></div><small>© 2026 LOOM CARE · CONCEPT &amp; R&amp;D</small></footer>
+      <section id="roadmap" className="roadmap-section">
+        <div className="roadmap-title"><p>One gentle step at a time</p><h2>The care story<br/><em>keeps growing.</em></h2></div>
+        <div className="roadmap-tabs" role="tablist" aria-label="Loom Care roadmap">{['Care','Voice','Connect','Insight'].map((label, i) => <button key={label} role="tab" aria-selected={activeRoadmap === i} onClick={() => setActiveRoadmap(i)}><span>0{i + 1}</span>{label}</button>)}</div>
+        <motion.div key={activeRoadmap} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45 }} className="roadmap-panel">
+          <div><small>{['HERE NOW','COMING NEXT','ON THE HORIZON','OUR BIG PICTURE'][activeRoadmap]}</small><h3>{['Safety that asks nothing of them.','Reminders in the voices they love.','Freedom that travels beyond home.','Health patterns that finally make sense.'][activeRoadmap]}</h3><p>{['Fall detection, physical SOS, offline medicine reminders, and the family phone relay.','Spoken medicine names and recorded messages from children and grandchildren.','A direct eSIM, location sharing, and two-way calls without a nearby phone.','Connected blood pressure, oxygen, and glucose signals understood over time.'][activeRoadmap]}</p></div>
+          <div className={`roadmap-object object-${activeRoadmap}`}><span className="roadmap-heart"><Heart fill="currentColor" /></span>{activeRoadmap === 0 && <Pendant/>}{activeRoadmap === 1 && <MessageCircleHeart className="roadmap-big-icon"/>}{activeRoadmap === 2 && <MapPin className="roadmap-big-icon"/>}{activeRoadmap === 3 && <HeartPulse className="roadmap-big-icon"/>}</div>
+        </motion.div>
+      </section>
 
-    {authOpen&&<div className="modal-veil" onMouseDown={e=>e.target===e.currentTarget&&setAuthOpen(false)}><div className="auth-glass"><button onClick={()=>setAuthOpen(false)} aria-label="Close"><X/></button><span className="brand-led"/><p>CAREGIVER PORTAL</p><h2>Your circle,<br/>always connected.</h2><button className="google-signin"><b>G</b> Continue with Google</button><div className="auth-rule"><span/>OR MAGIC LINK<span/></div><input type="email" placeholder="you@example.com"/><button className="magic-link">Send secure link</button><small>Authentication activates when Firebase keys are connected.</small></div></div>}
-  </main>;
+      <section id="waitlist" className="waitlist-section">
+        <div className="envelope-scene"><div className="envelope-back"/><motion.div initial={{ y: 80 }} whileInView={{ y: 0 }} viewport={{ amount: .6 }} transition={{ duration: .8, ease }} className="letter"><Heart className="size-6" fill="currentColor"/><small>AN INVITATION FOR YOUR FAMILY</small><h2>Help us make care<br/>feel more human.</h2><p>Join our first circle for early access, honest product updates, and a chance to shape the hardware beta.</p>
+          <form onSubmit={joinWaitlist} className="waitlist-form"><div className="form-row"><label>Full name<input name="name" required placeholder="Your name"/></label><label>Email address<input name="email" type="email" required placeholder="you@example.com"/></label></div><label>Your role<select name="role"><option>Adult Child / Caregiver</option><option>Elderly Parent</option><option>Healthcare Professional</option></select></label><label className="check-row"><input name="isBetaTester" type="checkbox"/>I’d like to test an early pendant with my family.</label><button disabled={status === 'loading'}>{status === 'loading' ? 'Joining…' : 'Join the first circle'}<ArrowRight className="size-4"/></button><div className="form-message" aria-live="polite">{status === 'success' && 'You’re in. Welcome to the circle.'}{status === 'error' && 'That didn’t go through. Please try once more.'}</div></form>
+        </motion.div><div className="envelope-front"><span>With care, from Loom.</span></div></div>
+      </section>
+
+      <footer><div className="footer-brand"><span className="brand-mark"><Heart className="size-4" fill="currentColor"/></span><b>LOOM CARE</b><p>Because independence and safety<br/>should never be opposites.</p></div><div className="footer-links"><div><b>Explore</b><a href="#story">How it cares</a><a href="#details">The pendant</a><a href="#roadmap">Our future</a></div><div><b>Legal</b><a href="#">Privacy</a><a href="#">Terms</a><a href="mailto:hello@loom.care">Contact</a></div></div><span className="footer-note">Made with care in India · © 2026</span></footer>
+
+      {(menuOpen || authOpen) && <div className="modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) { setMenuOpen(false); setAuthOpen(false); } }}>
+        {menuOpen ? <div className="mobile-menu"><button onClick={() => setMenuOpen(false)} aria-label="Close menu"><X/></button><a href="#story" onClick={() => setMenuOpen(false)}>How it cares</a><a href="#details" onClick={() => setMenuOpen(false)}>The pendant</a><a href="#roadmap" onClick={() => setMenuOpen(false)}>Our future</a><a href="#waitlist" onClick={() => setMenuOpen(false)}>Join the first circle</a></div> : <div className="auth-modal"><button className="close-modal" onClick={() => setAuthOpen(false)} aria-label="Close sign in"><X/></button><span className="auth-heart"><Heart fill="currentColor"/></span><small>WELCOME BACK</small><h2>Your care circle,<br/>all in one place.</h2><button className="google-button"><b>G</b>Continue with Google</button><div className="or"><span/>or use a magic link<span/></div><input type="email" placeholder="you@example.com" aria-label="Email address"/><button className="magic-button">Send my magic link</button><p>Sign-in activates when the Firebase keys are connected.</p></div>}
+      </div>}
+    </main>
+  );
 }

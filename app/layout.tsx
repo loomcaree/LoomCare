@@ -11,10 +11,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: 'Loom Care — Independence, connected',
-  description: 'A calm safety pendant that protects independence and keeps the people you love close.',
-  openGraph: { title: 'Loom Care — Independence, connected', description: 'A calmer way to stay close.', images: [{ url: '/og.png', width: 1731, height: 909, alt: 'Loom Care pendant' }] },
-  twitter: { card: 'summary_large_image', title: 'Loom Care — Independence, connected', description: 'A calmer way to stay close.', images: ['/og.png'] },
+  title: 'Loom Care — Let them live freely',
+  description: 'A simple pendant that notices falls, remembers medicines, and brings family closer—quietly.',
+  openGraph: { title: 'Loom Care — Let them live freely', description: 'Care that stays quietly close.', images: [{ url: '/og.png', width: 1731, height: 909, alt: 'Loom Care' }] },
+  twitter: { card: 'summary_large_image', title: 'Loom Care — Let them live freely', description: 'Care that stays quietly close.', images: ['/og.png'] },
 };
 
 export default function RootLayout({
