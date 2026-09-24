@@ -10,13 +10,6 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "redirects": [
-      {
-        "source": "/join",
-        "destination": "/#contact",
-        "type": 302
-      }
-    ],
     "headers": [
       {
         "source": "/assets/**",

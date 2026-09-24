@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface LoomLogoProps extends React.SVGProps<SVGSVGElement> {
+interface LoomMarkProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
   size?: number;
   color?: string;
@@ -14,7 +14,7 @@ export function LoomMark({
   size = 28,
   color = 'currentColor',
   ...props
-}: LoomLogoProps) {
+}: LoomMarkProps) {
   return (
     <svg
       width={size * 1.6}
@@ -44,20 +44,23 @@ export function LoomLogo({
   size = 28,
   color = '#3e6bf6',
   ...props
-}: LoomLogoProps) {
+}: React.HTMLAttributes<HTMLSpanElement> & { size?: number; color?: string }) {
   return (
-    <div
-      className={`inline-flex items-center select-none font-sans font-bold tracking-tight ${className}`}
-      style={{ color, height: size, fontSize: size * 0.92, lineHeight: 1 }}
-      {...(props as React.HTMLAttributes<HTMLDivElement>)}
+    <span
+      className={`loom-wordmark ${className}`}
+      style={{ color, fontSize: size * 0.92 }}
+      role="img"
+      aria-label="Loom Care"
+      {...props}
     >
-      <span className="font-semibold tracking-[-0.03em] lowercase">l</span>
+      <span aria-hidden="true">l</span>
       <LoomMark
-        size={size * 0.72}
+        size={size * 0.64}
         color={color}
-        className="mx-[1.5px] inline-block align-middle transform translate-y-[-0.5px]"
+        className="wordmark-loop"
+        aria-hidden="true"
       />
-      <span className="font-semibold tracking-[-0.02em] lowercase">mcare</span>
-    </div>
+      <span aria-hidden="true">mcare</span>
+    </span>
   );
 }

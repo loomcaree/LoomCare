@@ -16,6 +16,7 @@ export default defineConfig({
           new URL('./privacy/index.html', import.meta.url),
         ),
         terms: fileURLToPath(new URL('./terms/index.html', import.meta.url)),
+        join: fileURLToPath(new URL('./join/index.html', import.meta.url)),
       },
     },
   },

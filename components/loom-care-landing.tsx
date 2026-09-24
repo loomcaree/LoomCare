@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   motion,
   useMotionValue,
@@ -23,6 +23,7 @@ import {
 import { LoomMark } from '@/components/loom-logo';
 
 import { SiteHeader, SiteFooter } from '@/components/site-shell';
+import { installSectionNavigation } from '@/lib/section-navigation';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -42,7 +43,7 @@ function Pendant({
       <div className="pendant-face">
         <LoomMark
           size={22}
-          color={alert ? '#fff' : '#2d5cf3'}
+          color={alert ? '#e8454b' : 'var(--blue)'}
           className="drop-shadow-sm"
         />
         <span className="pendant-light" />
@@ -282,6 +283,7 @@ function ChapterStack({
   return (
     <section
       ref={containerRef}
+      data-scroll-section
       className={`chapter-section ${tone} ${deepScroll && !reducedMotion ? 'chapter-deep' : ''}`}
       aria-labelledby={`chapter-title-${index}`}
     >
@@ -313,6 +315,11 @@ function ChapterStack({
 
 export function LoomCareLanding() {
   const reducedMotion = useReducedMotion();
+  const navigationRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (navigationRef.current)
+      return installSectionNavigation(navigationRef.current);
+  }, []);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
@@ -323,14 +330,23 @@ export function LoomCareLanding() {
   const progress = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
 
   return (
-    <div className="site-shell">
+    <div className="site-shell landing-shell" ref={navigationRef}>
       <motion.div className="scroll-progress" style={{ width: progress }} />
 
       <SiteHeader />
-      <main id="main-content" tabIndex={-1}>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        aria-keyshortcuts="ArrowUp ArrowDown"
+      >
         {/* LAYER 1: Full-Opacity Background Hero with Centered White Title */}
         <div className="hero-section">
-          <section ref={heroRef} id="top" className="hero-centered">
+          <section
+            ref={heroRef}
+            id="top"
+            className="hero-centered"
+            data-scroll-section
+          >
             <motion.div
               className="hero-bg-layer"
               style={{ y: reducedMotion ? 0 : heroY }}
@@ -366,7 +382,7 @@ export function LoomCareLanding() {
         </div>
 
         {/* LAYER 2: Story Intro Bridge */}
-        <section id="story" className="story-intro">
+        <section id="story" className="story-intro" data-scroll-section>
           <p>A very human promise</p>
           <h2>
             Every ordinary day deserves
@@ -482,7 +498,7 @@ export function LoomCareLanding() {
         </ChapterStack>
 
         {/* LAYER 7: Details Section */}
-        <section id="details" className="details-section">
+        <section id="details" className="details-section" data-scroll-section>
           <div className="details-head">
             <p>Less to manage. More to live.</p>
             <h2>
@@ -536,6 +552,7 @@ export function LoomCareLanding() {
 
         <section
           id="company"
+          data-scroll-section
           className="company-section"
           aria-labelledby="company-heading"
         >
@@ -562,7 +579,7 @@ export function LoomCareLanding() {
           </div>
         </section>
       </main>
-      <SiteFooter />
+      <SiteFooter scrollSection />
     </div>
   );
 }

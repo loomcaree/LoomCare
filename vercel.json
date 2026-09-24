@@ -3,12 +3,5 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm ci",
-  "redirects": [
-    {
-      "source": "/join",
-      "destination": "/#contact",
-      "permanent": false
-    }
-  ]
+  "installCommand": "npm ci"
 }

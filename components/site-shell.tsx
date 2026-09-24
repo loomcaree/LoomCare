@@ -3,7 +3,9 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { LoomLogo } from '@/components/loom-logo';
 
-export type SitePage = 'home' | 'about' | 'privacy' | 'terms';
+export type SitePage = 'home' | 'about' | 'privacy' | 'terms' | 'join';
+
+
 
 const navigation = [
   { label: 'Home', href: '/#top', page: 'home' },
@@ -23,7 +25,7 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', darkMode ? '#11151e' : '#fbfaf7');
+      ?.setAttribute('content', darkMode ? '#0e0f12' : '#fbfaf7');
   }, [darkMode]);
 
   useEffect(() => {
@@ -70,6 +72,17 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
     </button>
   );
 
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 15);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
       <a className="skip-link" href="#main-content">
@@ -77,7 +90,7 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
       </a>
       <header
         ref={headerRef}
-        className="topbar"
+        className={`topbar ${scrolled ? 'topbar-scrolled' : ''}`}
         onBlur={(event) => {
           if (
             event.relatedTarget &&
@@ -102,6 +115,10 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
         </nav>
         <div className="nav-actions">
           <div className="desktop-theme-control">{themeButton}</div>
+          <a href="/join/" className="pill-button header-waitlist" id="header-join-link">
+            Join waitlist
+            <ArrowRight aria-hidden="true" />
+          </a>
           <button
             ref={menuButtonRef}
             type="button"
@@ -136,6 +153,14 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
                   <ArrowRight aria-hidden="true" />
                 </a>
               ))}
+              <a
+                href="/join/"
+                className="pill-button header-waitlist mobile-header-join"
+                onClick={() => setMenuOpen(false)}
+              >
+                Join waitlist
+                <ArrowRight aria-hidden="true" />
+              </a>
               <div className="mobile-appearance">
                 <div>
                   <span>Appearance</span>
@@ -151,9 +176,16 @@ export function SiteHeader({ page = 'home' }: { page?: SitePage }) {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({
+  scrollSection = false,
+}: {
+  scrollSection?: boolean;
+}) {
   return (
-    <footer id="contact">
+    <footer
+      id="contact"
+      data-scroll-section={scrollSection ? 'end' : undefined}
+    >
       <div className="footer-brand">
         <LoomLogo size={24} color="var(--ink)" />
         <p>
@@ -203,11 +235,12 @@ export function SiteFooter() {
           <a href="/#top">Home</a>
           <a href="/#story">Our care</a>
           <a href="/#details">The pendant</a>
+          <a href="/join/">Join waitlist</a>
         </div>
         <div>
           <b>Company</b>
           <a href="/about/">About us</a>
-          <a href="mailto:hello@loom.care">Contact</a>
+          <a href="mailto:loomcaree@gmail.com">Contact</a>
         </div>
         <div>
           <b>Legal</b>
