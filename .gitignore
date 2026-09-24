@@ -1,20 +1,5 @@
 # dependencies
 /node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/.vinext/
-/out/
 
 # misc
 .DS_Store
@@ -33,12 +18,10 @@ yarn-error.log*
 !.env.production
 
 # deployment and generated files
-.vercel
-next-env.d.ts
 /dist/
-/.wrangler/
 /outputs/
 /work/
+/coverage/
 
 # Local Firebase CLI state and TypeScript cache
 /.firebase/
