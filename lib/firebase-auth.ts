@@ -4,13 +4,16 @@ import {
   browserPopupRedirectResolver,
   browserSessionPersistence,
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   fetchSignInMethodsForEmail,
   getAdditionalUserInfo,
   GoogleAuthProvider,
   indexedDBLocalPersistence,
   initializeAuth,
+  linkWithCredential,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  signOut,
   updateProfile,
   type Auth,
   type User,
@@ -204,4 +207,20 @@ export async function sendWaitlistPasswordReset(email: string): Promise<void> {
     if (code === 'auth/google-account-exists') throw error;
   }
   await sendPasswordResetEmail(getLoomAuth(), cleanEmail);
+}
+
+/**
+ * Links an email+password credential to an existing Google-authenticated user.
+ * Call this after `signInWithPopup` for a brand-new Google account to enforce
+ * the "every account must have a password" policy.
+ */
+export async function linkPasswordToGoogle(user: User, password: string): Promise<void> {
+  const credential = EmailAuthProvider.credential(user.email!, password);
+  await linkWithCredential(user, credential);
+}
+
+/** Signs out and clears all local auth hints. */
+export async function loomSignOut(): Promise<void> {
+  markSignedOut();
+  await signOut(getLoomAuth());
 }

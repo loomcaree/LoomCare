@@ -12,11 +12,11 @@ export default defineConfig({
       input: {
         home: fileURLToPath(new URL('./index.html', import.meta.url)),
         about: fileURLToPath(new URL('./about/index.html', import.meta.url)),
-        privacy: fileURLToPath(
-          new URL('./privacy/index.html', import.meta.url),
-        ),
+        privacy: fileURLToPath(new URL('./privacy/index.html', import.meta.url)),
         terms: fileURLToPath(new URL('./terms/index.html', import.meta.url)),
         join: fileURLToPath(new URL('./join/index.html', import.meta.url)),
+        'waitlist-form': fileURLToPath(new URL('./waitlist-form/index.html', import.meta.url)),
+        dashboard: fileURLToPath(new URL('./dashboard/index.html', import.meta.url)),
       },
     },
   },

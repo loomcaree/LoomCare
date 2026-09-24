@@ -7,6 +7,8 @@ const pages = [
   'privacy/index.html',
   'terms/index.html',
   'join/index.html',
+  'waitlist-form/index.html',
+  'dashboard/index.html',
 ];
 const titles = new Set();
 for (const page of pages) {
@@ -44,5 +46,5 @@ assert(
   'Server output must not be included in the static upload.',
 );
 console.log(
-  'All five static HTML pages, unique titles, CSS and JavaScript verified.',
+  'All seven static HTML pages, unique titles, CSS and JavaScript verified.',
 );
